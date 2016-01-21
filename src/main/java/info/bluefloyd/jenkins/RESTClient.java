@@ -2,11 +2,11 @@ package info.bluefloyd.jenkins;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.thoughtworks.xstream.core.util.Base64Encoder;
 import info.bluefloyd.jira.model.IssueSummary;
 import info.bluefloyd.jira.model.IssueSummaryList;
 import info.bluefloyd.jira.model.RestResult;
 import info.bluefloyd.jira.model.TransitionList;
+import org.apache.commons.codec.binary.Base64;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -16,6 +16,8 @@ import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Simple generic REST client based on native HTTP. Also contains a logic layer
@@ -35,7 +37,7 @@ public class RESTClient {
   private final String userName;
   private final String password;
   private final PrintStream logger;
-  private final boolean debug = false;
+  private boolean debug = false;
   private final String basicAuthToken;
 
   // Constructor - set up required information
@@ -46,8 +48,8 @@ public class RESTClient {
     this.logger = logger;
 
     String rawAuth = userName + ":" + password;
-    Base64Encoder encoder = new Base64Encoder();
-    basicAuthToken = "Basic " + encoder.encode(rawAuth.getBytes("UTF-8"));
+    Base64 encoder = new Base64();
+    basicAuthToken = "Basic " + encoder.encodeAsString(rawAuth.getBytes("UTF-8"));
   }
 
   /**
@@ -64,7 +66,7 @@ public class RESTClient {
    */
   public IssueSummaryList findIssuesByJQL(String jql) {
     String findIssueUrlString = baseAPIUrl + REST_SEARCH_PATH;
-    if (debug) {
+    if (isDebug()) {
       logger.println("***Using this URL for finding the issues: " + findIssueUrlString);
     }
 
@@ -73,7 +75,7 @@ public class RESTClient {
       findIssueURL = new URL(findIssueUrlString);
     } catch (MalformedURLException ex) {
       logger.println("Unable to parse URL string " + findIssueUrlString);
-      logger.print(ex);
+      logger.println(ex);
       return null;
     }
 
@@ -87,13 +89,24 @@ public class RESTClient {
             + "    ]\n"
             + "}";
 
+    if (isDebug()) {
+      logger.println("***Bodydata for search: ------------------------------" );
+      logger.println(bodydata);
+      logger.println("***Bodydata for search: ------------------------------" );
+    }
+
     RestResult result;
     try {
       result = doPost(findIssueURL, bodydata);
     } catch (IOException ex) {
       logger.println("Unable to connect to REST service");
-      logger.print(ex);
+      logger.println(ex);
       return null;
+    }
+
+    if (isDebug()) {
+      logger.println("***REST result:  " + result.getResultCode());
+      logger.println("***REST message: " + result.getResultMessage());
     }
 
     if (result.isValidResult()) {
@@ -103,7 +116,7 @@ public class RESTClient {
         summaryList = mapper.readValue(result.getResultMessage(), IssueSummaryList.class);
       } catch (IOException ex) {
         logger.println("Unable to parse JSON result: " + result.getResultMessage());
-        logger.print(ex);
+        logger.println(ex);
         return null;
       }
 
@@ -122,7 +135,7 @@ public class RESTClient {
    */
   public void updateIssueStatus(IssueSummary issue, String realWorkflowActionName) {
     String transitionPath = baseAPIUrl + REST_UPDATE_STATUS_PATH.replaceAll("\\{issue-key\\}", issue.getKey());
-    if (debug) {
+    if (isDebug()) {
       logger.println("***Using this URL for finding the transition: " + transitionPath);
     }
 
@@ -131,7 +144,7 @@ public class RESTClient {
       transitionURL = new URL(transitionPath);
     } catch (MalformedURLException ex) {
       logger.println("Unable to parse URL string " + transitionPath);
-      logger.print(ex);
+      logger.println(ex);
       return;
     }
 
@@ -142,8 +155,13 @@ public class RESTClient {
         result = doGet(transitionURL);
       } catch (IOException ex) {
         logger.println("Unable to connect to REST service to check possible transitions");
-        logger.print(ex);
+        logger.println(ex);
         return;
+      }
+
+      if (isDebug()) {
+        logger.println("***REST result:  " + result.getResultCode());
+        logger.println("***REST message: " + result.getResultMessage());
       }
 
       if (result.isValidResult()) {
@@ -154,7 +172,7 @@ public class RESTClient {
           possibleTransition = mapper.readValue(result.getResultMessage(), TransitionList.class);
         } catch (IOException ex) {
           logger.println("Unable to parse JSON result: " + result.getResultMessage());
-          logger.print(ex);
+          logger.println(ex);
           return;
         }
 
@@ -166,7 +184,7 @@ public class RESTClient {
             result = doPost(transitionURL, bodydata);
           } catch (IOException ex) {
             logger.println("Unable to connect to REST service to perform transition");
-            logger.print(ex);
+            logger.println(ex);
             return;
           }
 
@@ -192,7 +210,7 @@ public class RESTClient {
   public void addIssueComment(IssueSummary issue, String realComment) {
 
     String issuePath = baseAPIUrl + REST_ADD_COMMENT_PATH.replaceAll("\\{issue-key\\}", issue.getKey());
-    if (debug) {
+    if (isDebug()) {
       logger.println("***Using this URL for adding the comment: " + issuePath);
     }
 
@@ -201,20 +219,31 @@ public class RESTClient {
       addCommentURL = new URL(issuePath);
     } catch (MalformedURLException ex) {
       logger.println("Unable to parse URL string " + issuePath);
-      logger.print(ex);
+      logger.println(ex);
       return;
     }
 
     if (!realComment.trim().isEmpty()) {
       String bodydata = "{\"body\": \"" + realComment + "\"}";
 
+      if (isDebug()) {
+        logger.println("***Bodydata for add comment: ------------------------------" );
+        logger.println(bodydata);
+        logger.println("***Bodydata for add comment: ------------------------------" );
+      }
+
       RestResult result;
       try {
         result = doPost(addCommentURL, bodydata);
       } catch (IOException ex) {
         logger.println("Unable to connect to REST service to add comment");
-        logger.print(ex);
+        logger.println(ex);
         return;
+      }
+
+      if (isDebug()) {
+        logger.println("***REST result:  " + result.getResultCode());
+        logger.println("***REST message: " + result.getResultMessage());
       }
 
       if (!result.isValidResult()) {
@@ -232,7 +261,7 @@ public class RESTClient {
    */
   public void updateIssueField(IssueSummary issue, String customFieldId, String realFieldValue) {
     String setFieldsPath = baseAPIUrl + REST_UPDATE_FIELD_PATH.replaceAll("\\{issue-key\\}", issue.getKey());
-    if (debug) {
+    if (isDebug()) {
       logger.println("***Using this URL for adding the comment: " + setFieldsPath);
     }
 
@@ -241,19 +270,25 @@ public class RESTClient {
       setFieldsURL = new URL(setFieldsPath);
     } catch (MalformedURLException ex) {
       logger.println("Unable to parse URL string " + setFieldsPath);
-      logger.print(ex);
+      logger.println(ex);
       return;
     }
 
     if (!customFieldId.trim().isEmpty()) {
       String bodydata = "{\"fields\": {\"" + customFieldId + "\": \"" + realFieldValue + "\"}}";
 
+      if (isDebug()) {
+        logger.println("***Bodydata for update field: ------------------------------" );
+        logger.println(bodydata);
+        logger.println("***Bodydata for update field: ------------------------------" );
+      }
+
       RestResult result;
       try {
         result = doPut(setFieldsURL, bodydata);
       } catch (IOException ex) {
         logger.println("Unable to connect to REST service to set field ");
-        logger.print(ex);
+        logger.println(ex);        
         return;
       }
 
@@ -369,6 +404,15 @@ public class RESTClient {
     conn.setRequestProperty("Content-Type", "application/json");
     conn.setRequestProperty("Authorization", basicAuthToken);
 
+    if (debug) {
+      logger.println("***REST GET:");
+      logger.println("***Auth: " + basicAuthToken);
+      Map<String,List<String>> properties = conn.getRequestProperties();
+      for(String property : properties.keySet()) {
+        logger.println("***REST property: " + property + " --> " + properties.get(property).toString());
+      }
+    }
+
     BufferedReader br = new BufferedReader(new InputStreamReader(
             (conn.getInputStream())));
 
@@ -409,10 +453,20 @@ public class RESTClient {
     conn.setRequestMethod("POST");
     conn.setRequestProperty("Accept", "application/json");
     conn.setRequestProperty("Content-Type", "application/json");
-    conn.setRequestProperty("Authorization", basicAuthToken);
+    conn.addRequestProperty("Authorization", basicAuthToken);
     conn.setRequestProperty("Content-Length", String.valueOf(postDataBytes.length));
-
     conn.setDoOutput(true);
+    
+    if (debug) {
+      logger.println("***REST POST:");
+      logger.println("***Auth: " + basicAuthToken);
+      Map<String,List<String>> properties = conn.getRequestProperties();
+      logger.println("***REST property size: " + properties.size());
+      for(String property : properties.keySet()) {
+        logger.println("***REST property: " + property + " --> " + properties.get(property).toString());
+      }
+    }
+
     OutputStream os = conn.getOutputStream();
     os.write(postDataBytes);
     os.flush();
@@ -458,8 +512,17 @@ public class RESTClient {
     conn.setRequestProperty("Content-Type", "application/json");
     conn.setRequestProperty("Authorization", basicAuthToken);
     conn.setRequestProperty("Content-Length", String.valueOf(postDataBytes.length));
-
     conn.setDoOutput(true);
+    
+    if (debug) {
+      logger.println("***REST PUT:");
+      logger.println("***Auth: " + basicAuthToken);
+      Map<String,List<String>> properties = conn.getRequestProperties();
+      for(String property : properties.keySet()) {
+        logger.println("***REST property: " + property + " --> " + properties.get(property).toString());
+      }
+    }
+
     OutputStream os = conn.getOutputStream();
     os.write(postDataBytes);
     os.flush();
@@ -483,5 +546,19 @@ public class RESTClient {
     conn.disconnect();
 
     return result;
+  }
+
+  /**
+   * @return the debug
+   */
+  public boolean isDebug() {
+    return debug;
+  }
+
+  /**
+   * @param debug the debug to set
+   */
+  public void setDebug(boolean debug) {
+    this.debug = debug;
   }
 }
