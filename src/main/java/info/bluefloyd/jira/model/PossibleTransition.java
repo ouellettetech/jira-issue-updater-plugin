@@ -1,5 +1,7 @@
 package info.bluefloyd.jira.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 /**
  * Holder class for possible transitions. These are per JIRA and status.
  * 
@@ -8,6 +10,7 @@ package info.bluefloyd.jira.model;
  * 
  * @author Ian Sparkes, Swisscom AG
  */
+@JsonIgnoreProperties(ignoreUnknown=true)
 public class PossibleTransition {
   private String id;
   private String name;
