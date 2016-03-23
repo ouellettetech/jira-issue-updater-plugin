@@ -91,15 +91,12 @@ public class RESTClient {
         logger.println("*** sending data: " + bodydata);
     }
 
-    RestResult result = null;
+    RestResult result;
     try {
       result = doPost(findIssueURL, bodydata);
     } catch (IOException ex) {
       logger.println("Unable to connect to REST service");
       logger.println(ex);
-      if (result != null) {
-        logger.println(result.getResultMessage());
-      }
       return null;
     }
 
