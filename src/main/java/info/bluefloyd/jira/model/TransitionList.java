@@ -27,6 +27,16 @@ public class TransitionList {
     this.transitions = transitions;
   }
   
+  public String getTransitionsToString() {
+      String result = "";
+      String sep = "";
+      for(PossibleTransition transition : transitions) {
+          result = result + sep + transition.getName();
+          sep = ",";
+      }
+      return result;
+  }
+  
   public boolean containsTransition(String targetTransition) {
     for (PossibleTransition possibleTransition : getTransitions()) {
       if (possibleTransition.getName().equalsIgnoreCase(targetTransition)) {

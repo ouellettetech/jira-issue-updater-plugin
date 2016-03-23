@@ -185,7 +185,7 @@ public class RESTClient {
           }
         } else {
           logger.println("Not possible to transtion " + issue.getKey() + " to status " + realWorkflowActionName + " because the transition is not possible");
-          logger.println("Possible transtions:" + possibleTransition.getTransitions().toString());
+          logger.println("Possible transtions:" + possibleTransition.getTransitionsToString());
         }
       } else {
         logger.println("Unable to find transitions: (" + result.getResultCode() + ")" + result.getResultMessage());
