@@ -61,6 +61,8 @@ public class IssueUpdatesBuilder extends Builder {
 	private String realWorkflowActionName;
 	private String realComment;
 	private String realFieldValue;
+	private String realUserName;
+	private String realPassword;
 
 	private final boolean resettingFixedVersions;
 	private final boolean createNonExistingFixedVersions;
@@ -153,6 +155,14 @@ public class IssueUpdatesBuilder extends Builder {
 	public String getFixedVersions() {
 		return fixedVersions;
 	}
+	
+	public String getRealUserName() {
+		return realUserName;
+	}
+	
+	public String getRealPassword() {
+		return realPassword;
+	}
 
 	public boolean isResettingFixedVersions() {
 		return resettingFixedVersions;
@@ -186,7 +196,7 @@ public class IssueUpdatesBuilder extends Builder {
 		vars.putAll(build.getBuildVariables());
 		substituteEnvVars(vars);
 
-		RESTClient client = new RESTClient(getRestAPIUrl(),getUserName(), getPassword(),logger);
+		RESTClient client = new RESTClient(getRestAPIUrl(),getRealUserName(), getRealPassword(),logger);
 		client.setDebug(debug);
 
 		// Find the list of issues we are interested in, maximum of 10000
@@ -348,6 +358,8 @@ public class IssueUpdatesBuilder extends Builder {
 		realWorkflowActionName = workflowActionName;
 		realComment = comment;
 		realFieldValue = customFieldValue;
+		realUserName = userName;
+		realPassword = password;
 		String expandedFixedVersions = fixedVersions == null ? "" : fixedVersions.trim();
 		for (Map.Entry<String, String> entry : vars.entrySet()) {
 			realJql = substituteEnvVar(realJql, entry.getKey(), entry.getValue());
@@ -355,6 +367,8 @@ public class IssueUpdatesBuilder extends Builder {
 			realComment = substituteEnvVar(realComment, entry.getKey(), entry.getValue());
 			realFieldValue = substituteEnvVar(realFieldValue, entry.getKey(), entry.getValue());
 			expandedFixedVersions = substituteEnvVar(expandedFixedVersions, entry.getKey(), entry.getValue());
+			realUserName = substituteEnvVar(realUserName, entry.getKey(), entry.getValue());
+			realPassword = substituteEnvVar(realPassword, entry.getKey(), entry.getValue());
 		}
 		fixedVersionNames = Arrays.asList(expandedFixedVersions.trim().split(FIXED_VERSIONS_LIST_DELIMITER));
 	}
