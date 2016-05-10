@@ -1,5 +1,6 @@
 package info.bluefloyd.jenkins;
 
+import hudson.EnvVars;
 import hudson.Extension;
 import hudson.Launcher;
 import hudson.model.BuildListener;
@@ -67,6 +68,8 @@ public class IssueUpdatesBuilder extends Builder {
 	private final boolean failIfJqlFails;
 	private final boolean failIfNoIssuesReturned;
 	private final boolean failIfNoJiraConnection;
+  
+  private boolean debug;
 
 	transient List<String> fixedVersionNames;
 
@@ -170,16 +173,21 @@ public class IssueUpdatesBuilder extends Builder {
 	@Override
 	public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws IOException, InterruptedException {
 		PrintStream logger = listener.getLogger();
+		Map<String, String> vars = new HashMap<String, String>();
+		EnvVars envVars = build.getEnvironment(listener);
+		debug = (envVars.keySet().contains("JIRA_ISSUE_UPDATER_DEBUG"));
+
 		logger.println("-------------------------------------------------------");
 		logger.println("JIRA Update Build Step");
+		if (debug) logger.println("Debug mode");
 		logger.println("-------------------------------------------------------");
 
-		Map<String, String> vars = new HashMap<String, String>();
 		vars.putAll(build.getEnvironment(listener));
 		vars.putAll(build.getBuildVariables());
 		substituteEnvVars(vars);
 
 		RESTClient client = new RESTClient(getRestAPIUrl(),getUserName(), getPassword(),logger);
+		client.setDebug(debug);
 
 		// Find the list of issues we are interested in, maximum of 10000
 		IssueSummaryList issueSummary = client.findIssuesByJQL(realJql);
