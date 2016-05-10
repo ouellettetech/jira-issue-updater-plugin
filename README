@@ -10,8 +10,12 @@ Possible scenarios in which you might want to use it:
 Inputs:
 
 - the Jira REST URL (e.g. http://something.com/rest/api/2)
-- the Jira username and password to be used to connect to Jira
+- the Jira username and password to be used to connect to Jira (only Basic username:password auth is supported)
 - a JQL query selecting the issues to be updated (e.g. project="JENKINS" and status="Pending deploy")
 - the name of the workflow action to be executed (not mandatory)
 - the message to be added (can use environment variable substitution) to each issue (not mandatory)
 - The field name and value to be used (not mandatory)
+
+Debugging:
+
+ - If you want to see debug messages, add an environment variable "JIRA_ISSUE_UPDATER_DEBUG=TRUE" to the environment

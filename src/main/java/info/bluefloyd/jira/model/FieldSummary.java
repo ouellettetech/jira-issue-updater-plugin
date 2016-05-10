@@ -1,5 +1,6 @@
 package info.bluefloyd.jira.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.util.List;
 
 /**
@@ -8,6 +9,7 @@ import java.util.List;
  * 
  * @author Ian Sparkes, Swisscom AG
  */
+@JsonIgnoreProperties(ignoreUnknown=true)
 public class FieldSummary {
   private String summary;
   private List<VersionSummary> versions;

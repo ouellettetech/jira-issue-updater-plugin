@@ -5,10 +5,13 @@
  */
 package info.bluefloyd.jira.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 /**
  *
  * @author ian
  */
+@JsonIgnoreProperties(ignoreUnknown=true)
 public class VersionSummary {
   private boolean archived;
   private String description;

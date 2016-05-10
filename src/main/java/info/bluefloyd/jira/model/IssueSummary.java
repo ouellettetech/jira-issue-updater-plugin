@@ -1,11 +1,14 @@
 package info.bluefloyd.jira.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 /**
  * Issue Summary. Encapsulates the issue information we get back from the
  * "find issues" rest call.
  * 
  * @author Ian Sparkes, Swisscom AG
  */
+@JsonIgnoreProperties(ignoreUnknown=true)
 public class IssueSummary {
   private String expand;
   private String id;
