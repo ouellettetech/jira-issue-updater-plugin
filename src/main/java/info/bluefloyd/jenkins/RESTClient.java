@@ -110,7 +110,7 @@ public class RESTClient {
       logger.println("***REST message: " + result.getResultMessage());
     }
 
-    if (result.isValidResult()) {
+    if (result.getResultCode() == HttpURLConnection.HTTP_OK) {
       ObjectMapper mapper = new ObjectMapper();
       IssueSummaryList summaryList;
       try {
@@ -165,7 +165,7 @@ public class RESTClient {
         logger.println("***REST message: " + result.getResultMessage());
       }
 
-      if (result.isValidResult()) {
+      if (result.getResultCode() == HttpURLConnection.HTTP_OK) {
         ObjectMapper mapper = new ObjectMapper();
         mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
         TransitionList possibleTransition;
@@ -192,7 +192,7 @@ public class RESTClient {
             return;
           }
 
-          if (!result.isValidResult()) {
+          if (result.getResultCode() != HttpURLConnection.HTTP_NO_CONTENT) {
             logger.println("Could not update status for issue: " + issue.getKey() + " (" + result.getResultCode() + ") " + result.getResultMessage());
           }
         } else {
@@ -250,7 +250,7 @@ public class RESTClient {
         logger.println("***REST message: " + result.getResultMessage());
       }
 
-      if (!result.isValidResult()) {
+      if (result.getResultCode() != HttpURLConnection.HTTP_CREATED) {
         logger.println("Could not set comment " + realComment + " in issue " + issue.getKey() + " (" + result.getResultCode() + ") " + result.getResultMessage());
       }
     }
@@ -266,7 +266,7 @@ public class RESTClient {
   public void updateIssueField(IssueSummary issue, String customFieldId, String realFieldValue) {
     String setFieldsPath = baseAPIUrl + REST_UPDATE_FIELD_PATH.replaceAll("\\{issue-key\\}", issue.getKey());
     if (isDebug()) {
-      logger.println("***Using this URL for adding the comment: " + setFieldsPath);
+      logger.println("***Using this URL for updating issue field: " + setFieldsPath);
     }
 
     URL setFieldsURL;
@@ -295,7 +295,7 @@ public class RESTClient {
         return;
       }
 
-      if (!result.isValidResult()) {
+      if (result.getResultCode() != HttpURLConnection.HTTP_NO_CONTENT) {
         logger.println("Could not set field " + customFieldId + " in issue " + issue.getKey() + " (" + result.getResultCode() + ") " + result.getResultMessage());
       }
     }
@@ -390,57 +390,18 @@ public class RESTClient {
   // Generic REST call implementations
   // ---------------------------------------------------------------------------
   /**
-   * Perform a GET action on the given URL with the credentials. Deemed success
-   * if the result code is 200 or 201.
+   * Perform a GET action on the given URL with the credentials.
    *
    * @param url The full REST URL to use
    * @return The REST response
    * @throws IOException
    */
   private RestResult doGet(URL url) throws IOException {
-
-    RestResult result = new RestResult();
-
-    HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-    conn.setRequestMethod("GET");
-    conn.setRequestProperty("Accept", "application/json");
-    conn.setRequestProperty("Content-Type", "application/json");
-    conn.setRequestProperty("Authorization", basicAuthToken);
-
-    if (isDebug()) {
-      logger.println("***REST GET:");
-      logger.println("***Auth: " + basicAuthToken);
-      Map<String,List<String>> properties = conn.getRequestProperties();
-      for(String property : properties.keySet()) {
-        logger.println("***REST property: " + property + " --> " + properties.get(property).toString());
-      }
-      logger.println("***Response code: " + conn.getResponseCode());
-    }
-
-    BufferedReader br = new BufferedReader(new InputStreamReader(
-            (conn.getInputStream())));
-
-    StringBuilder output = new StringBuilder();
-    String outputLine;
-    while ((outputLine = br.readLine()) != null) {
-      output.append(outputLine);
-    }
-
-    result.setResultCode(conn.getResponseCode());
-    result.setResultMessage(output.toString());
-
-    if ((conn.getResponseCode() == 200) || (conn.getResponseCode() == 201)) {
-      result.setValidResult(true);
-    }
-
-    conn.disconnect();
-
-    return result;
+      return doRequest("GET", url, null);
   }
 
   /**
    * Perform a POST action on the given URL with the credentials and body.
-   * Deemed success if the result code is 200 or 201.
    *
    * @param url The full REST URL to use
    * @param bodydata The post body we are using
@@ -448,21 +409,49 @@ public class RESTClient {
    * @throws IOException
    */
   private RestResult doPost(URL url, String bodydata) throws IOException {
+      return doRequest("POST", url, bodydata);
+  }
+
+  /**
+   * Perform a PUT action on the given URL with the credentials and body
+   *
+   * @param url The full REST URL to use
+   * @param bodydata The post body we are using
+   * @return The REST response
+   * @throws IOException
+   */
+  private RestResult doPut(URL url, String bodydata) throws IOException {
+      return doRequest("PUT", url, bodydata);
+  }
+  
+  /**
+   * Perform a given action on the given URL with the credentials and body.
+   *
+   * @param action Action to perform (GET, POST, PUT)
+   * @param url The full REST URL to use
+   * @param bodydata The post body we are using
+   * @return The REST response
+   * @throws IOException
+   */
+  private RestResult doRequest(String action, URL url, String bodydata) throws IOException {
 
     RestResult result = new RestResult();
-
-    byte[] postDataBytes = bodydata.getBytes("UTF-8");
+    byte[] postDataBytes = null;
 
     HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-    conn.setRequestMethod("POST");
+    conn.setRequestMethod(action);
     conn.setRequestProperty("Accept", "application/json");
     conn.setRequestProperty("Content-Type", "application/json");
     conn.addRequestProperty("Authorization", basicAuthToken);
-    conn.setRequestProperty("Content-Length", String.valueOf(postDataBytes.length));
-    conn.setDoOutput(true);
+    
+    if (!"GET".equals(action)) {
+        postDataBytes = bodydata.getBytes("UTF-8");
+        conn.setRequestProperty("Content-Length", String.valueOf(postDataBytes.length));
+        conn.setDoOutput(true);
+    }
     
     if (isDebug()) {
-      logger.println("***REST POST:");
+      logger.println("***REST " + action + ":");
       logger.println("***Auth: " + basicAuthToken);
       Map<String,List<String>> properties = conn.getRequestProperties();
       logger.println("***REST property size: " + properties.size());
@@ -471,9 +460,11 @@ public class RESTClient {
       }
     }
 
-    OutputStream os = conn.getOutputStream();
-    os.write(postDataBytes);
-    os.flush();
+    if (!"GET".equals(action)) {
+        OutputStream os = conn.getOutputStream();
+        os.write(postDataBytes);
+        os.flush();   
+    }
 
     if (isDebug()) {
         logger.println("***Response code: " + conn.getResponseCode());
@@ -490,70 +481,6 @@ public class RESTClient {
 
     result.setResultCode(conn.getResponseCode());
     result.setResultMessage(output.toString());
-
-    if ((conn.getResponseCode() == 200) || (conn.getResponseCode() == 201) || (conn.getResponseCode() == 204)) {
-      result.setValidResult(true);
-    }
-
-    conn.disconnect();
-
-    return result;
-  }
-
-  /**
-   * Perform a PUT action on the given URL with the credentials and body. Deemed
-   * success if the result code is 200 or 204.
-   *
-   * @param url The full REST URL to use
-   * @param bodydata The post body we are using
-   * @return The REST response
-   * @throws IOException
-   */
-  private RestResult doPut(URL url, String bodydata) throws IOException {
-
-    RestResult result = new RestResult();
-    byte[] postDataBytes = bodydata.getBytes("UTF-8");
-
-    HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-    conn.setRequestMethod("PUT");
-    conn.setRequestProperty("Accept", "application/json");
-    conn.setRequestProperty("Content-Type", "application/json");
-    conn.setRequestProperty("Authorization", basicAuthToken);
-    conn.setRequestProperty("Content-Length", String.valueOf(postDataBytes.length));
-    conn.setDoOutput(true);
-    
-    if (isDebug()) {
-      logger.println("***REST PUT:");
-      logger.println("***Auth: " + basicAuthToken);
-      Map<String,List<String>> properties = conn.getRequestProperties();
-      for(String property : properties.keySet()) {
-        logger.println("***REST property: " + property + " --> " + properties.get(property).toString());
-      }
-    }
-
-    OutputStream os = conn.getOutputStream();
-    os.write(postDataBytes);
-    os.flush();
-
-    if (isDebug()) {
-        logger.println("***Response code: " + conn.getResponseCode());
-    }
-    
-    BufferedReader br = new BufferedReader(new InputStreamReader(
-            (conn.getInputStream())));
-
-    StringBuilder output = new StringBuilder();
-    String outputLine;
-    while ((outputLine = br.readLine()) != null) {
-      output.append(outputLine);
-    }
-
-    result.setResultCode(conn.getResponseCode());
-    result.setResultMessage(output.toString());
-
-    if ((conn.getResponseCode() == 200) || (conn.getResponseCode() == 204)) {
-      result.setValidResult(true);
-    }
 
     conn.disconnect();
 
