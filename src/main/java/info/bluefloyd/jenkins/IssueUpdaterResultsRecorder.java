@@ -171,10 +171,15 @@ public class IssueUpdaterResultsRecorder extends Recorder {
     if (issueSummary.getIssues() != null) {
       for (IssueSummary issue : issueSummary.getIssues()) {
         logger.println("Updating " + issue.getKey() + "  \t" + issue.getFields().getSummary());
-        client.updateIssueStatus(issue, realWorkflowActionName);
-        client.addIssueComment(issue, realComment);
-        client.updateIssueField(issue, customFieldId, realFieldValue);
+        Boolean result = true;
+        result &= client.updateIssueStatus(issue, realWorkflowActionName);
+        result &= client.addIssueComment(issue, realComment);
+        result &= client.updateIssueField(issue, customFieldId, realFieldValue);
         //client.updateFixedVersions(issue, fixedVersionNames, resettingFixedVersions, logger);
+        if(failIfNoJiraConnection && !result) {
+          logger.println("Checkbox 'Fail this build if Jira operation fails' checked, failing build");
+          return false;
+        }
       }
     }
     return true;
