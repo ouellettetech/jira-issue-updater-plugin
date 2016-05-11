@@ -134,8 +134,9 @@ public class RESTClient {
    *
    * @param issue The issue we want to update
    * @param realWorkflowActionName The target status
+   * @return False if operation fails, otherwise true
    */
-  public void updateIssueStatus(IssueSummary issue, String realWorkflowActionName) {
+  public Boolean updateIssueStatus(IssueSummary issue, String realWorkflowActionName) {
     String transitionPath = baseAPIUrl + REST_UPDATE_STATUS_PATH.replaceAll("\\{issue-key\\}", issue.getKey());
     if (isDebug()) {
       logger.println("***Using this URL for finding the transition: " + transitionPath);
@@ -147,7 +148,7 @@ public class RESTClient {
     } catch (MalformedURLException ex) {
       logger.println("Unable to parse URL string " + transitionPath);
       logger.println(ex);
-      return;
+      return false;
     }
 
     if (!realWorkflowActionName.trim().isEmpty()) {
@@ -158,7 +159,7 @@ public class RESTClient {
       } catch (IOException ex) {
         logger.println("Unable to connect to REST service to check possible transitions");
         logger.println(ex);
-        return;
+        return false;
       }
 
       if (isDebug()) {
@@ -175,7 +176,7 @@ public class RESTClient {
         } catch (IOException ex) {
           logger.println("Unable to parse JSON result: " + result.getResultMessage());
           logger.println(ex);
-          return;
+          return false;
         }
 
         if (possibleTransition.containsTransition(realWorkflowActionName)) {
@@ -190,20 +191,24 @@ public class RESTClient {
           } catch (IOException ex) {
             logger.println("Unable to connect to REST service to perform transition");
             logger.println(ex);
-            return;
+            return false;
           }
 
           if (result.getResultCode() != HttpURLConnection.HTTP_NO_CONTENT) {
             logger.println("Could not update status for issue: " + issue.getKey() + " (" + result.getResultCode() + ") " + result.getResultMessage());
+            return false;
           }
         } else {
           logger.println("Not possible to transtion " + issue.getKey() + " to status " + realWorkflowActionName + " because the transition is not possible");
           logger.println("Possible transtions:" + possibleTransition.getTransitionsToString());
+          return false;
         }
       } else {
         logger.println("Unable to find transitions: (" + result.getResultCode() + ")" + result.getResultMessage());
+        return false;
       }
     }
+    return true;
   }
 
   /**
@@ -212,7 +217,7 @@ public class RESTClient {
    * @param issue The issue to update
    * @param realComment The comment text to add
    */
-  public void addIssueComment(IssueSummary issue, String realComment) {
+  public Boolean addIssueComment(IssueSummary issue, String realComment) {
 
     String issuePath = baseAPIUrl + REST_ADD_COMMENT_PATH.replaceAll("\\{issue-key\\}", issue.getKey());
     if (isDebug()) {
@@ -225,7 +230,7 @@ public class RESTClient {
     } catch (MalformedURLException ex) {
       logger.println("Unable to parse URL string " + issuePath);
       logger.println(ex);
-      return;
+      return false;
     }
 
     if (!realComment.trim().isEmpty()) {
@@ -243,7 +248,7 @@ public class RESTClient {
       } catch (IOException ex) {
         logger.println("Unable to connect to REST service to add comment");
         logger.println(ex);
-        return;
+        return false;
       }
 
       if (isDebug()) {
@@ -253,8 +258,10 @@ public class RESTClient {
 
       if (result.getResultCode() != HttpURLConnection.HTTP_CREATED) {
         logger.println("Could not set comment " + realComment + " in issue " + issue.getKey() + " (" + result.getResultCode() + ") " + result.getResultMessage());
+        return false;
       }
     }
+    return true;
   }
 
   /**
@@ -264,7 +271,7 @@ public class RESTClient {
    * @param customFieldId The field we are trying to change
    * @param realFieldValue The new value
    */
-  public void updateIssueField(IssueSummary issue, String customFieldId, String realFieldValue) {
+  public Boolean updateIssueField(IssueSummary issue, String customFieldId, String realFieldValue) {
     String setFieldsPath = baseAPIUrl + REST_UPDATE_FIELD_PATH.replaceAll("\\{issue-key\\}", issue.getKey());
     if (isDebug()) {
       logger.println("***Using this URL for updating issue field: " + setFieldsPath);
@@ -276,7 +283,7 @@ public class RESTClient {
     } catch (MalformedURLException ex) {
       logger.println("Unable to parse URL string " + setFieldsPath);
       logger.println(ex);
-      return;
+      return false;
     }
 
     if (!customFieldId.trim().isEmpty()) {
@@ -292,14 +299,16 @@ public class RESTClient {
         result = doPut(setFieldsURL, bodydata);
       } catch (IOException ex) {
         logger.println("Unable to connect to REST service to set field ");
-        logger.println(ex);        
-        return;
+        logger.println(ex);
+        return false;
       }
 
       if (result.getResultCode() != HttpURLConnection.HTTP_NO_CONTENT) {
         logger.println("Could not set field " + customFieldId + " in issue " + issue.getKey() + " (" + result.getResultCode() + ") " + result.getResultMessage());
+        return false;
       }
     }
+    return true;
   }
 
 //  private void updateFixedVersions(IssueSummary issue, PrintStream logger) {
@@ -386,7 +395,7 @@ public class RESTClient {
 //    }
 //    return ids;
 //  }
-  
+
   // ---------------------------------------------------------------------------
   // Generic REST call implementations
   // ---------------------------------------------------------------------------
@@ -445,7 +454,7 @@ public class RESTClient {
     conn.setRequestProperty("Content-Type", "application/json");
     conn.addRequestProperty("Authorization", basicAuthToken);
     
-    if (!"GET".equals(action)) {
+    if (bodydata != null) {
         postDataBytes = bodydata.getBytes("UTF-8");
         conn.setRequestProperty("Content-Length", String.valueOf(postDataBytes.length));
         conn.setDoOutput(true);
