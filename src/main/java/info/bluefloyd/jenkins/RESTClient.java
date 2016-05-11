@@ -9,6 +9,7 @@ import info.bluefloyd.jira.model.TransitionList;
 import org.apache.commons.codec.binary.Base64;
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.PrintStream;
@@ -470,21 +471,29 @@ public class RESTClient {
         logger.println("***Response code: " + conn.getResponseCode());
     }
     
-    BufferedReader br = new BufferedReader(new InputStreamReader(
-            (conn.getInputStream())));
+    result.setResultCode(conn.getResponseCode());
+    result.setResultMessage(getOutput(conn));
+
+    conn.disconnect();
+
+    return result;
+  }
+
+  private String getOutput(HttpURLConnection conn) throws IOException {
+    InputStream responseStream;
+    if (conn.getResponseCode() >= 400) {
+      responseStream = conn.getErrorStream();
+    } else {
+      responseStream = conn.getInputStream();
+    }
+    BufferedReader br = new BufferedReader(new InputStreamReader(responseStream));
 
     StringBuilder output = new StringBuilder();
     String outputLine;
     while ((outputLine = br.readLine()) != null) {
       output.append(outputLine);
     }
-
-    result.setResultCode(conn.getResponseCode());
-    result.setResultMessage(output.toString());
-
-    conn.disconnect();
-
-    return result;
+    return output.toString();
   }
 
   /**
