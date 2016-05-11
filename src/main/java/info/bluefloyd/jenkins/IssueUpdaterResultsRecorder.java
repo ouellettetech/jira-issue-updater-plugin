@@ -64,6 +64,8 @@ public class IssueUpdaterResultsRecorder extends Recorder {
   private String realWorkflowActionName;
   private String realComment;
   private String realFieldValue;
+  private String realUserName;
+  private String realPassword;
 
   transient List<String> fixedVersionNames;
 
@@ -140,7 +142,7 @@ public class IssueUpdaterResultsRecorder extends Recorder {
     vars.putAll(build.getBuildVariables());
     substituteEnvVars(vars);
 
-    RESTClient client = new RESTClient(getRestAPIUrl(),getUserName(), getPassword(),logger);
+    RESTClient client = new RESTClient(getRestAPIUrl(),getRealUserName(), getRealPassword(),logger);
     
     // Find the list of issues we are interested in, maximum of 10000
     IssueSummaryList issueSummary = client.findIssuesByJQL(realJql);
@@ -318,6 +320,20 @@ public class IssueUpdaterResultsRecorder extends Recorder {
   public String getPassword() {
     return password;
   }
+  
+  /**
+   * @return the realUserName
+   */
+  public String getRealUserName() {
+    return realUserName;
+  }
+
+  /**
+   * @return the realPassword
+   */
+  public String getRealPassword() {
+    return realPassword;
+  }
 
   /**
    * @return the jql
@@ -373,6 +389,8 @@ public class IssueUpdaterResultsRecorder extends Recorder {
     realWorkflowActionName = workflowActionName;
     realComment = comment;
     realFieldValue = customFieldValue;
+    realUserName = userName;
+    realPassword = password;
     String expandedFixedVersions = fixedVersions == null ? "" : fixedVersions.trim();
     for (Map.Entry<String, String> entry : vars.entrySet()) {
       realJql = substituteEnvVar(realJql, entry.getKey(), entry.getValue());
@@ -380,6 +398,8 @@ public class IssueUpdaterResultsRecorder extends Recorder {
       realComment = substituteEnvVar(realComment, entry.getKey(), entry.getValue());
       realFieldValue = substituteEnvVar(realFieldValue, entry.getKey(), entry.getValue());
       expandedFixedVersions = substituteEnvVar(expandedFixedVersions, entry.getKey(), entry.getValue());
+	  realUserName = substituteEnvVar(realUserName, entry.getKey(), entry.getValue());
+	  realPassword = substituteEnvVar(realPassword, entry.getKey(), entry.getValue());
     }
     fixedVersionNames = Arrays.asList(expandedFixedVersions.trim().split(FIXED_VERSIONS_LIST_DELIMITER));
   }
