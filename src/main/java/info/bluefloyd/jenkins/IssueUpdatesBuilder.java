@@ -75,11 +75,6 @@ public class IssueUpdatesBuilder extends Builder {
 
 	transient List<String> fixedVersionNames;
 
-	// Temporarily cache the version String-ID mapping for multiple
-	// projects, to avoid performance penalty may be caused by excessive
-	// getVersions() invocations.  
-	// Map<ProjectKey, Map<VersionName, VersionID>>
-	transient Map<String, Map<String, String>> projectVersionNameIdCache;
 
 	@DataBoundConstructor
 	public IssueUpdatesBuilder(String restAPIUrl, String userName, String password, String jql, String workflowActionName,
@@ -213,13 +208,6 @@ public class IssueUpdatesBuilder extends Builder {
 			} else {
 				return true;
 			}
-		}
-
-		// reset the cache
-		projectVersionNameIdCache = new ConcurrentHashMap<String, Map<String, String>>();
-
-		if (fixedVersions != null && !fixedVersions.isEmpty()) {
-			fixedVersionNames = Arrays.asList(fixedVersions.split(FIXED_VERSIONS_LIST_DELIMITER));
 		}
 
 		// Perform the actions on each found JIRA
