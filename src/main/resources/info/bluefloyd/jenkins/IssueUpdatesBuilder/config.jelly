@@ -46,8 +46,6 @@
     <f:textbox />
   </f:entry>
 
-<!-- Not yet Implemented, sorry...
-
   <f:entry title="Remove existing fixed versions first" field="resettingFixedVersions">
     <f:checkbox />
   </f:entry>
@@ -60,8 +58,6 @@
     <f:textbox />
   </f:entry>
   
-  -->
-
   <f:entry title="Fail this build if JQL returns error" field="failIfJqlFails">
     <f:checkbox />
   </f:entry>

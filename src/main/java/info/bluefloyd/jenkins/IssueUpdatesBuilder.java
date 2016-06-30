@@ -230,7 +230,7 @@ public class IssueUpdatesBuilder extends Builder {
 				result &= client.updateIssueStatus(issue, realWorkflowActionName);
 				result &= client.addIssueComment(issue, realComment);
 				result &= client.updateIssueField(issue, customFieldId, realFieldValue);
-				//client.updateFixedVersions(issue, fixedVersionNames, resettingFixedVersions, logger);
+				result &= client.updateFixedVersions(issue, fixedVersionNames, createNonExistingFixedVersions, resettingFixedVersions);
 				if(failIfNoJiraConnection && !result) {
 					logger.println("Checkbox 'Fail this build if Jira operation fails' checked, failing build");
 					return false;
