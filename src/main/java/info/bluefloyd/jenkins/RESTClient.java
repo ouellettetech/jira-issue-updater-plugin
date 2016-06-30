@@ -346,7 +346,11 @@ public class RESTClient {
       
       List<String> fixVersionNames = new ArrayList<String>();
       if (!fixedVersionNames.isEmpty()) {
-        fixVersionNames.addAll(fixedVersionNames);
+        for (String version : fixedVersionNames) {
+          if (!"".equals(version)) {
+            fixVersionNames.addAll(fixedVersionNames);
+          }
+        }
       }
       if(!resettingFixedVersions) {
         for (VersionSummary version : issue.getFields().getFixVersions()) {
