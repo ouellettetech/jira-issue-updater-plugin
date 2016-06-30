@@ -12,7 +12,10 @@ import java.util.List;
 @JsonIgnoreProperties(ignoreUnknown=true)
 public class FieldSummary {
   private String summary;
+  private Project project;
   private List<VersionSummary> versions;
+  private List<VersionSummary> fixVersions;
+
 
   /**
    * @return the summary
@@ -42,4 +45,31 @@ public class FieldSummary {
     this.versions = versions;
   }
 
+  /**
+   * @return the fixVersions
+   */
+  public List<VersionSummary> getFixVersions() {
+    return fixVersions;
+  }
+
+  /**
+   * @param fixVersions the fixVersions to set
+   */
+  public void setFixVersions(List<VersionSummary> fixVersions) {
+    this.fixVersions = fixVersions;
+  }
+  
+  /**
+   * @return the project
+   */
+  public Project getProject() {
+    return project;
+  }
+
+  /**
+   * @param project the project to set
+   */
+  public void setProject(Project project) {
+    this.project = project;
+  }
 }
