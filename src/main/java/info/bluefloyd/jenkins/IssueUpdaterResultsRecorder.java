@@ -4,6 +4,7 @@ import hudson.Extension;
 import hudson.Launcher;
 import hudson.model.Action;
 import hudson.model.BuildListener;
+import hudson.model.Descriptor;
 import hudson.model.ModelObject;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
@@ -138,8 +139,18 @@ public class IssueUpdaterResultsRecorder extends Recorder {
     Map<String, String> vars = new HashMap<String, String>();
     vars.putAll(build.getEnvironment(listener));
     vars.putAll(build.getBuildVariables());
+    
+    for(String key : vars.keySet())
+    {
+    	logger.println(String.format("Variables Name: %s Value : %s", key, vars.get(key)));
+    }
     substituteEnvVars(vars);
 
+    for(String key : vars.keySet())
+    {
+    	logger.println(String.format("After Sub Variables Name: %s Value : %s", key, vars.get(key)));
+    }
+    
     RESTClient client = new RESTClient(getRestAPIUrl(),getUserName(), getPassword(),logger);
     
     // Find the list of issues we are interested in, maximum of 10000
@@ -185,7 +196,15 @@ public class IssueUpdaterResultsRecorder extends Recorder {
    */
   @Override
   public DescriptorImpl getDescriptor() {
-    return (DescriptorImpl) super.getDescriptor();
+	  DescriptorImpl returnVal=null;
+//	  try {
+//		  returnVal=(DescriptorImpl) super.getDescriptor();
+//	  }
+//	  catch (AssertionError ex)
+//	  {
+		  returnVal= new DescriptorImpl();
+//	  }
+    return returnVal;
   }
 
   /**
