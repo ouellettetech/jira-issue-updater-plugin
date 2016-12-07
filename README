@@ -16,6 +16,8 @@ Inputs:
 - the message to be added (can use environment variable substitution) to each issue (not mandatory)
 - The field name and value to be used (not mandatory)
 
+NOTE: The JQL can also contain "~" matches, "project = DEPLOY and summary ~ $APP_NAME and summary ~ $LATEST_TAG" will match "Deploy TTSGateway v0.4.32" in the variable $APP_NAME is "TTSGateway" and $LATEST_TAG is "v0.4.32"
+
 Debugging:
 
  - If you want to see debug messages, add an environment variable "JIRA_ISSUE_UPDATER_DEBUG=TRUE" to the environment
