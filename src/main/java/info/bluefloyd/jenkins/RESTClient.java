@@ -71,7 +71,7 @@ public class RESTClient {
    * An error in making the REST call or decoding the response results in a null
    * result.
    *
-   * @param jql
+   * @param jql The search JQL we will use
    * @return The list of issues, null if exception, empty list if no matching
    * issues
    */
@@ -227,8 +227,9 @@ public class RESTClient {
    *
    * @param issue The issue to update
    * @param realComment The comment text to add
+   * @return True if we added the comment
    */
-  public Boolean addIssueComment(IssueSummary issue, String realComment) {
+  public boolean addIssueComment(IssueSummary issue, String realComment) {
 
     String issuePath = baseAPIUrl + REST_ADD_COMMENT_PATH.replaceAll("\\{issue-key\\}", issue.getKey());
     if (isDebug()) {
@@ -281,8 +282,9 @@ public class RESTClient {
    * @param issue
    * @param customFieldId The field we are trying to change
    * @param realFieldValue The new value
+   * @return True if we updated the field
    */
-  public Boolean updateIssueField(IssueSummary issue, String customFieldId, String realFieldValue) {
+  public boolean updateIssueField(IssueSummary issue, String customFieldId, String realFieldValue) {
     String setFieldsPath = baseAPIUrl + REST_UPDATE_FIELD_PATH.replaceAll("\\{issue-key\\}", issue.getKey());
     if (isDebug()) {
       logger.println("***Using this URL for updating issue field: " + setFieldsPath);

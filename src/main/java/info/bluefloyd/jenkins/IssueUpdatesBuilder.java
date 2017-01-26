@@ -16,7 +16,6 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.servlet.ServletException;
@@ -32,7 +31,7 @@ import info.bluefloyd.jira.model.IssueSummaryList;
  * {@link DescriptorImpl#newInstance(StaplerRequest)} is invoked and a new
  * {@link IssueUpdatesBuilder} is created. The created instance is persisted to
  * the project configuration XML by using XStream, so this allows you to use
- * instance fields (like {@link #name}) to remember the configuration.
+ * instance fields (like name) to remember the configuration.
  *
  * <p>
  * When a build is performed, the
@@ -250,8 +249,8 @@ public class IssueUpdatesBuilder extends Builder {
 		 * @param value This parameter receives the value that the user has typed.
 		 * @return Indicates the outcome of the validation. This is sent to the
 		 * browser.
-		 * @throws java.io.IOException
-		 * @throws javax.servlet.ServletException
+		 * @throws java.io.IOException We were not able to perform the validation
+		 * @throws javax.servlet.ServletException We were not able to perform the validation
 		 */
 		public FormValidation doCheckRESTUrl(@QueryParameter String value) throws IOException, ServletException {
 			if (!value.startsWith(HTTP_PROTOCOL_PREFIX) && !value.startsWith(HTTPS_PROTOCOL_PREFIX)) {
@@ -266,8 +265,8 @@ public class IssueUpdatesBuilder extends Builder {
 		 * @param value This parameter receives the value that the user has typed.
 		 * @return Indicates the outcome of the validation. This is sent to the
 		 * browser.
-		 * @throws java.io.IOException
-		 * @throws javax.servlet.ServletException
+		 * @throws java.io.IOException We were not able to perform the validation
+		 * @throws javax.servlet.ServletException We were not able to perform the validation
 		 */
 		public FormValidation doCheckUserName(@QueryParameter String value) throws IOException, ServletException {
 			if (value.length() == 0) {
@@ -285,8 +284,8 @@ public class IssueUpdatesBuilder extends Builder {
 		 * @param value This parameter receives the value that the user has typed.
 		 * @return Indicates the outcome of the validation. This is sent to the
 		 * browser.
-		 * @throws java.io.IOException
-		 * @throws javax.servlet.ServletException
+		 * @throws java.io.IOException We were not able to perform the validation
+		 * @throws javax.servlet.ServletException We were not able to perform the validation
 		 */
 		public FormValidation doCheckPassword(@QueryParameter String value) throws IOException, ServletException {
 			if (value.length() == 0) {
@@ -305,8 +304,8 @@ public class IssueUpdatesBuilder extends Builder {
 		 * @param value This parameter receives the value that the user has typed.
 		 * @return Indicates the outcome of the validation. This is sent to the
 		 * browser.
-		 * @throws java.io.IOException
-		 * @throws javax.servlet.ServletException
+		 * @throws java.io.IOException We were not able to perform the validation
+		 * @throws javax.servlet.ServletException We were not able to perform the validation
 		 */
 		public FormValidation doCheckJql(@QueryParameter String value) throws IOException, ServletException {
 			if (value.length() == 0) {
@@ -332,7 +331,7 @@ public class IssueUpdatesBuilder extends Builder {
 		/**
 		 * This human readable name is used in the configuration screen.
 		 *
-		 * @return
+		 * @return Display name of this plugin
 		 */
 		@Override
 		public String getDisplayName() {

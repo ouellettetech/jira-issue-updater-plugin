@@ -97,14 +97,14 @@ public class IssueUpdaterResultsRecorder extends Recorder {
   }
 
   /**
-   * {@link Recorder}
+   * Get the list of project actions
    *
-   * @param project
-   * @return
+   * @param project Project we are working on
+   * @return  Collection of actions in the project
    */
   @Override
   public Collection<Action> getProjectActions(AbstractProject<?, ?> project) {
-    final Collection<Action> list = new ArrayList<Action>();
+    final Collection<Action> list = new ArrayList<>();
     list.add(new IssueUpdaterBuildAction(project));
     return list;
   }
@@ -112,7 +112,7 @@ public class IssueUpdaterResultsRecorder extends Recorder {
   /**
    * {@link BuildStep}
    *
-   * @return
+   * @return The build step monitor
    */
   @Override
   public BuildStepMonitor getRequiredMonitorService() {
@@ -122,12 +122,12 @@ public class IssueUpdaterResultsRecorder extends Recorder {
   /**
    * {@link BuildStep}
    *
-   * @param build
-   * @param launcher
-   * @param listener
-   * @return
-   * @throws java.lang.InterruptedException
-   * @throws java.io.IOException
+   * @param build The build
+   * @param launcher The launcher
+   * @param listener The listener
+   * @return true if the build is OK, otherwise false
+   * @throws java.lang.InterruptedException If we are interrupted
+   * @throws java.io.IOException Something went wrong in the REST client
    */
   @Override
   public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener)
@@ -137,7 +137,7 @@ public class IssueUpdaterResultsRecorder extends Recorder {
     logger.println("JIRA Update Results Recorder");
     logger.println("-------------------------------------------------------");
 
-    Map<String, String> vars = new HashMap<String, String>();
+    Map<String, String> vars = new HashMap<>();
     vars.putAll(build.getEnvironment(listener));
     vars.putAll(build.getBuildVariables());
     substituteEnvVars(vars);
@@ -161,7 +161,7 @@ public class IssueUpdaterResultsRecorder extends Recorder {
     }
     
     // reset the cache
-    projectVersionNameIdCache = new ConcurrentHashMap<String, Map<String, String>>();
+    projectVersionNameIdCache = new ConcurrentHashMap<>();
 
     if (fixedVersions != null && !fixedVersions.isEmpty()) {
       fixedVersionNames = Arrays.asList(fixedVersions.split(FIXED_VERSIONS_LIST_DELIMITER));
@@ -188,7 +188,7 @@ public class IssueUpdaterResultsRecorder extends Recorder {
   /**
    * {@link Publisher}
    *
-   * @return
+   * @return The descriptor
    */
   @Override
   public DescriptorImpl getDescriptor() {
@@ -208,8 +208,8 @@ public class IssueUpdaterResultsRecorder extends Recorder {
      * @param value This parameter receives the value that the user has typed.
      * @return Indicates the outcome of the validation. This is sent to the
      * browser.
-     * @throws java.io.IOException
-     * @throws javax.servlet.ServletException
+     * @throws java.io.IOException We could not perform the validation
+     * @throws javax.servlet.ServletException We could not perform the validation
      */
     public FormValidation doCheckRESTUrl(@QueryParameter String value) throws IOException, ServletException {
       if (!value.startsWith(HTTP_PROTOCOL_PREFIX) && !value.startsWith(HTTPS_PROTOCOL_PREFIX)) {
@@ -224,8 +224,8 @@ public class IssueUpdaterResultsRecorder extends Recorder {
      * @param value This parameter receives the value that the user has typed.
      * @return Indicates the outcome of the validation. This is sent to the
      * browser.
-     * @throws java.io.IOException
-     * @throws javax.servlet.ServletException
+     * @throws java.io.IOException We could not perform the validation
+     * @throws javax.servlet.ServletException We could not perform the validation
      */
     public FormValidation doCheckUserName(@QueryParameter String value) throws IOException, ServletException {
       if (value.length() == 0) {
@@ -243,8 +243,8 @@ public class IssueUpdaterResultsRecorder extends Recorder {
      * @param value This parameter receives the value that the user has typed.
      * @return Indicates the outcome of the validation. This is sent to the
      * browser.
-     * @throws java.io.IOException
-     * @throws javax.servlet.ServletException
+     * @throws java.io.IOException We could not perform the validation
+     * @throws javax.servlet.ServletException We could not perform the validation
      */
     public FormValidation doCheckPassword(@QueryParameter String value) throws IOException, ServletException {
       if (value.length() == 0) {
@@ -263,8 +263,8 @@ public class IssueUpdaterResultsRecorder extends Recorder {
      * @param value This parameter receives the value that the user has typed.
      * @return Indicates the outcome of the validation. This is sent to the
      * browser.
-     * @throws java.io.IOException
-     * @throws javax.servlet.ServletException
+     * @throws java.io.IOException We could not perform the validation
+     * @throws javax.servlet.ServletException We could not perform the validation
      */
     public FormValidation doCheckJql(@QueryParameter String value) throws IOException, ServletException {
       if (value.length() == 0) {
@@ -284,8 +284,8 @@ public class IssueUpdaterResultsRecorder extends Recorder {
     /**
      * {@link BuildStepDescriptor}
      *
-     * @param jobType
-     * @return
+     * @param jobType Unused jobType
+     * @return Always applicable
      */
     @Override
     @SuppressWarnings("rawtypes")
@@ -297,7 +297,7 @@ public class IssueUpdaterResultsRecorder extends Recorder {
     /**
      * {@link ModelObject}
      *
-     * @return
+     * @return The display name
      */
     @Override
     public String getDisplayName() {

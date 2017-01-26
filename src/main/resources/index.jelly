@@ -1,3 +1,4 @@
+ <?jelly escape-by-default='true'?>
 <div>
   This plugin can update Jira issues by changing their workflow status and adding comments.
 </div>
