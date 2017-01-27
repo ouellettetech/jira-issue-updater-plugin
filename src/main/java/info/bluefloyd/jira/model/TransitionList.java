@@ -30,13 +30,13 @@ public class TransitionList {
   }
   
   public String getTransitionsToString() {
-      String result = "";
+      StringBuilder result = new StringBuilder();
       String sep = "";
       for(PossibleTransition transition : transitions) {
-          result = result + sep + transition.getName();
+          result.append(sep).append(transition.getName());
           sep = ",";
       }
-      return result;
+      return result.toString();
   }
   
   public boolean containsTransition(String targetTransition) {

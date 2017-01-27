@@ -69,12 +69,6 @@ public class IssueUpdaterResultsRecorder extends Recorder {
 
   transient List<String> fixedVersionNames;
 
-  // Temporarily cache the version String-ID mapping for multiple
-  // projects, to avoid performance penalty may be caused by excessive
-  // getVersions() invocations.  
-  // Map<ProjectKey, Map<VersionName, VersionID>>
-  transient Map<String, Map<String, String>> projectVersionNameIdCache;
-
   @DataBoundConstructor
   public IssueUpdaterResultsRecorder(String restAPIUrl, String userName, String password, String jql, String workflowActionName,
           String comment, String customFieldId, String customFieldValue, boolean resettingFixedVersions,
@@ -160,9 +154,6 @@ public class IssueUpdaterResultsRecorder extends Recorder {
       }
     }
     
-    // reset the cache
-    projectVersionNameIdCache = new ConcurrentHashMap<>();
-
     if (fixedVersions != null && !fixedVersions.isEmpty()) {
       fixedVersionNames = Arrays.asList(fixedVersions.split(FIXED_VERSIONS_LIST_DELIMITER));
     }
@@ -175,7 +166,7 @@ public class IssueUpdaterResultsRecorder extends Recorder {
         result &= client.updateIssueStatus(issue, realWorkflowActionName);
         result &= client.addIssueComment(issue, realComment);
         result &= client.updateIssueField(issue, customFieldId, realFieldValue);
-        //client.updateFixedVersions(issue, fixedVersionNames, resettingFixedVersions, logger);
+        client.updateFixedVersions(issue, fixedVersionNames, createNonExistingFixedVersions, resettingFixedVersions);
         if(failIfNoJiraConnection && !result) {
           logger.println("Checkbox 'Fail this build if Jira operation fails' checked, failing build");
           return false;

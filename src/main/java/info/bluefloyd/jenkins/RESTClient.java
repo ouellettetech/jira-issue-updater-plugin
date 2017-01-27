@@ -91,21 +91,21 @@ public class RESTClient {
     }
 
     String bodydata = "{"
-            + "    \"jql\": \"" + StringEscapeUtils.escapeJson(jql) + "\",\n"
-            + "    \"startAt\": 0,\n"
-            + "    \"maxResults\": 10000,\n"
-            + "    \"fields\": [\n"
-            + "        \"summary\",\n"
-            + "        \"versions\",\n"
-            + "        \"fixVersions\",\n"
-            + "        \"project\"\n"
-            + "    ]\n"
-            + "}";
+      + "    \"jql\": \"" + StringEscapeUtils.escapeJson(jql) + "\",\n"
+      + "    \"startAt\": 0,\n"
+      + "    \"maxResults\": 10000,\n"
+      + "    \"fields\": [\n"
+      + "        \"summary\",\n"
+      + "        \"versions\",\n"
+      + "        \"fixVersions\",\n"
+      + "        \"project\"\n"
+      + "    ]\n"
+      + "}";
 
     if (isDebug()) {
-      logger.println("***Bodydata for search: ------------------------------" );
+      logger.println("***Bodydata for search: ------------------------------");
       logger.println(bodydata);
-      logger.println("***Bodydata for search: ------------------------------" );
+      logger.println("***Bodydata for search: ------------------------------");
     }
 
     RestResult result;
@@ -249,9 +249,9 @@ public class RESTClient {
       String bodydata = "{\"body\": \"" + StringEscapeUtils.escapeJson(realComment) + "\"}";
 
       if (isDebug()) {
-        logger.println("***Bodydata for add comment: ------------------------------" );
+        logger.println("***Bodydata for add comment: ------------------------------");
         logger.println(bodydata);
-        logger.println("***Bodydata for add comment: ------------------------------" );
+        logger.println("***Bodydata for add comment: ------------------------------");
       }
 
       RestResult result;
@@ -279,7 +279,7 @@ public class RESTClient {
   /**
    * Update the status of the given field to the given value.
    *
-   * @param issue
+   * @param issue The issue we are working on
    * @param customFieldId The field we are trying to change
    * @param realFieldValue The new value
    * @return True if we updated the field
@@ -298,13 +298,13 @@ public class RESTClient {
       logger.println(ex);
       return false;
     }
-    
+
     if (!customFieldId.trim().isEmpty()) {
       String bodydata = "{\"fields\": {\"" + customFieldId + "\": \"" + StringEscapeUtils.escapeJson(realFieldValue) + "\"}}";
       if (isDebug()) {
-        logger.println("***Bodydata for update field: ------------------------------" );
+        logger.println("***Bodydata for update field: ------------------------------");
         logger.println(bodydata);
-        logger.println("***Bodydata for update field: ------------------------------" );
+        logger.println("***Bodydata for update field: ------------------------------");
       }
 
       RestResult result;
@@ -323,7 +323,7 @@ public class RESTClient {
     }
     return true;
   }
-  
+
   public boolean updateFixedVersions(IssueSummary issue, List<String> fixedVersionNames, boolean createNonExistingFixedVersions, boolean resettingFixedVersions) {
     if (resettingFixedVersions || !fixedVersionNames.isEmpty()) {
       String setFieldsPath = baseAPIUrl + REST_UPDATE_FIELD_PATH.replaceAll("\\{issue-key\\}", issue.getKey());
@@ -345,8 +345,8 @@ public class RESTClient {
           return false;
         }
       }
-      
-      List<String> fixVersionNames = new ArrayList<String>();
+
+      List<String> fixVersionNames = new ArrayList<>();
       if (!fixedVersionNames.isEmpty()) {
         for (String version : fixedVersionNames) {
           if (!"".equals(version)) {
@@ -354,30 +354,30 @@ public class RESTClient {
           }
         }
       }
-      if(!resettingFixedVersions) {
+      if (!resettingFixedVersions) {
         for (VersionSummary version : issue.getFields().getFixVersions()) {
           fixVersionNames.add(version.getName());
         }
       }
-      
+
       if (!fixVersionNames.isEmpty()) {
-        String bodydata = "{\"fields\": {\"fixVersions\": [";
+        StringBuilder bodydata = new StringBuilder("{\"fields\": {\"fixVersions\": [");
         String sep = "";
-        for(String version: fixVersionNames) {
-          bodydata += sep + "{\"name\":\"" + StringEscapeUtils.escapeJson(version) + "\"}";
+        for (String version : fixVersionNames) {
+          bodydata.append(sep).append("{\"name\":\"").append(StringEscapeUtils.escapeJson(version)).append("\"}");
           sep = ",";
         }
-        bodydata += "]}}";
-        
+        bodydata.append("]}}");
+
         if (isDebug()) {
-          logger.println("***Bodydata for update field: ------------------------------" );
-          logger.println(bodydata);
-          logger.println("***Bodydata for update field: ------------------------------" );
+          logger.println("***Bodydata for update field: ------------------------------");
+          logger.println(bodydata.toString());
+          logger.println("***Bodydata for update field: ------------------------------");
         }
 
         RestResult result;
         try {
-          result = doPut(setFieldsURL, bodydata);
+          result = doPut(setFieldsURL, bodydata.toString());
         } catch (IOException ex) {
           logger.println("Unable to connect to REST service to set field ");
           logger.println(ex);
@@ -394,9 +394,9 @@ public class RESTClient {
   }
 
   private boolean createNonExistingVersions(Project project, List<String> fixedVersionNames) {
-    
+
     if (projectVersionMapCache == null) {
-      projectVersionMapCache = new HashMap<String, List<VersionSummary>>();
+      projectVersionMapCache = new HashMap<>();
     }
     List<VersionSummary> versions;
     if (projectVersionMapCache.containsKey(project.getKey())) {
@@ -428,7 +428,8 @@ public class RESTClient {
       if (result.getResultCode() == HttpURLConnection.HTTP_OK) {
         ObjectMapper mapper = new ObjectMapper();
         try {
-          versions = mapper.readValue(result.getResultMessage(), new TypeReference<List<VersionSummary>>(){});
+          versions = mapper.readValue(result.getResultMessage(), new TypeReference<List<VersionSummary>>() {
+          });
         } catch (IOException ex) {
           logger.println("Unable to parse JSON result: " + result.getResultMessage());
           logger.println(ex);
@@ -438,7 +439,7 @@ public class RESTClient {
         return false;
       }
     }
-    
+
     for (String fixVersion : fixedVersionNames) {
       boolean found = false;
       for (VersionSummary version : versions) {
@@ -447,7 +448,7 @@ public class RESTClient {
         }
       }
       if (!found) {
-        
+
         String createVersionPath = baseAPIUrl + REST_CREATE_VERSION_PATH;
         if (isDebug()) {
           logger.println("***Using this URL for changing fix versions: " + createVersionPath);
@@ -461,23 +462,23 @@ public class RESTClient {
           logger.println(ex);
           return false;
         }
-        
+
         Calendar cal = Calendar.getInstance();
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
-        
-        String bodydata = "{\"description\": \""  + StringEscapeUtils.escapeJson(fixVersion) +  "\",\n"
-                          + "    \"name\": \""  + StringEscapeUtils.escapeJson(fixVersion) +  "\",\n"
-                          + "    \"project\": \""  + StringEscapeUtils.escapeJson(project.getKey()) +  "\",\n"
-                          + "    \"projectId\": \""  + StringEscapeUtils.escapeJson(project.getId()) +  "\",\n"
-                          + "    \"archived\": false,\n"
-                          + "    \"released\": false,\n"
-                          + "    \"releaseDate\": \"" + sdf.format(cal.getTime()) + "\"\n"
-                          + "}";
-        
+
+        String bodydata = "{\"description\": \"" + StringEscapeUtils.escapeJson(fixVersion) + "\",\n"
+          + "    \"name\": \"" + StringEscapeUtils.escapeJson(fixVersion) + "\",\n"
+          + "    \"project\": \"" + StringEscapeUtils.escapeJson(project.getKey()) + "\",\n"
+          + "    \"projectId\": \"" + StringEscapeUtils.escapeJson(project.getId()) + "\",\n"
+          + "    \"archived\": false,\n"
+          + "    \"released\": false,\n"
+          + "    \"releaseDate\": \"" + sdf.format(cal.getTime()) + "\"\n"
+          + "}";
+
         if (isDebug()) {
-          logger.println("***Bodydata for update field: ------------------------------" );
+          logger.println("***Bodydata for update field: ------------------------------");
           logger.println(bodydata);
-          logger.println("***Bodydata for update field: ------------------------------" );
+          logger.println("***Bodydata for update field: ------------------------------");
         }
 
         RestResult result;
@@ -505,9 +506,9 @@ public class RESTClient {
         }
       }
     }
-    
+
     projectVersionMapCache.put(project.getKey(), versions);
-    
+
     return true;
   }
 
@@ -522,7 +523,7 @@ public class RESTClient {
    * @throws IOException
    */
   private RestResult doGet(URL url) throws IOException {
-      return doRequest("GET", url, null);
+    return doRequest("GET", url, null);
   }
 
   /**
@@ -534,7 +535,7 @@ public class RESTClient {
    * @throws IOException
    */
   private RestResult doPost(URL url, String bodydata) throws IOException {
-      return doRequest("POST", url, bodydata);
+    return doRequest("POST", url, bodydata);
   }
 
   /**
@@ -546,9 +547,9 @@ public class RESTClient {
    * @throws IOException
    */
   private RestResult doPut(URL url, String bodydata) throws IOException {
-      return doRequest("PUT", url, bodydata);
+    return doRequest("PUT", url, bodydata);
   }
-  
+
   /**
    * Perform a given action on the given URL with the credentials and body.
    *
@@ -568,33 +569,33 @@ public class RESTClient {
     conn.setRequestProperty("Accept", "application/json");
     conn.setRequestProperty("Content-Type", "application/json");
     conn.addRequestProperty("Authorization", basicAuthToken);
-    
+
     if (bodydata != null) {
-        postDataBytes = bodydata.getBytes("UTF-8");
-        conn.setRequestProperty("Content-Length", String.valueOf(postDataBytes.length));
-        conn.setDoOutput(true);
+      postDataBytes = bodydata.getBytes("UTF-8");
+      conn.setRequestProperty("Content-Length", String.valueOf(postDataBytes.length));
+      conn.setDoOutput(true);
     }
-    
+
     if (isDebug()) {
       logger.println("***REST " + action + ":");
       logger.println("***Auth: " + basicAuthToken);
-      Map<String,List<String>> properties = conn.getRequestProperties();
+      Map<String, List<String>> properties = conn.getRequestProperties();
       logger.println("***REST property size: " + properties.size());
-      for(String property : properties.keySet()) {
-        logger.println("***REST property: " + property + " --> " + properties.get(property).toString());
+      for (Map.Entry<String, List<String>> property : properties.entrySet()) {
+        logger.println("***REST property: " + property.getKey() + " --> " + property.getValue().toString());
       }
     }
 
     if (!"GET".equals(action)) {
-        OutputStream os = conn.getOutputStream();
-        os.write(postDataBytes);
-        os.flush();   
+      OutputStream os = conn.getOutputStream();
+      os.write(postDataBytes);
+      os.flush();
     }
 
     if (isDebug()) {
-        logger.println("***Response code: " + conn.getResponseCode());
+      logger.println("***Response code: " + conn.getResponseCode());
     }
-    
+
     result.setResultCode(conn.getResponseCode());
     result.setResultMessage(getOutput(conn));
 
@@ -610,14 +611,17 @@ public class RESTClient {
     } else {
       responseStream = conn.getInputStream();
     }
-    BufferedReader br = new BufferedReader(new InputStreamReader(responseStream));
-
-    StringBuilder output = new StringBuilder();
-    String outputLine;
-    while ((outputLine = br.readLine()) != null) {
-      output.append(outputLine);
+    
+    String response;
+    try (BufferedReader br = new BufferedReader(new InputStreamReader(responseStream, "UTF-8"))) {
+      StringBuilder output = new StringBuilder();
+      String outputLine;
+      while ((outputLine = br.readLine()) != null) {
+        output.append(outputLine);
+      }
+      response = output.toString();
     }
-    return output.toString();
+    return response;
   }
 
   /**
