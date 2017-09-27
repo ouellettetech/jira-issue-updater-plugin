@@ -6,6 +6,7 @@ import hudson.model.Action;
 import hudson.model.BuildListener;
 import hudson.model.Descriptor;
 import hudson.model.ModelObject;
+import hudson.model.Result;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
 import hudson.tasks.BuildStep;
@@ -59,6 +60,7 @@ public class IssueUpdaterResultsRecorder extends Recorder {
   private final boolean failIfJqlFails;
   private final boolean failIfNoIssuesReturned;
   private final boolean failIfNoJiraConnection;
+  private PrintStream logger;
 
   // Worker variables
   private String realJql;
@@ -131,7 +133,7 @@ public class IssueUpdaterResultsRecorder extends Recorder {
   @Override
   public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener)
           throws InterruptedException, IOException {
-    PrintStream logger = listener.getLogger();
+    logger = listener.getLogger();
     logger.println("-------------------------------------------------------");
     logger.println("JIRA Update Results Recorder");
     logger.println("-------------------------------------------------------");
@@ -139,6 +141,8 @@ public class IssueUpdaterResultsRecorder extends Recorder {
     Map<String, String> vars = new HashMap<String, String>();
     vars.putAll(build.getEnvironment(listener));
     vars.putAll(build.getBuildVariables());
+    vars.put("BUILD_STATUS",build.getResult().toString());
+    
     
     for(String key : vars.keySet())
     {
@@ -179,8 +183,12 @@ public class IssueUpdaterResultsRecorder extends Recorder {
     // Perform the actions on each found JIRA
     if (issueSummary.getIssues() != null) {
       for (IssueSummary issue : issueSummary.getIssues()) {
-        logger.println("Updating " + issue.getKey() + "  \t" + issue.getFields().getSummary());
-        client.updateIssueStatus(issue, realWorkflowActionName);
+        logger.println("Updating In Recorder " + issue.getKey() + "  \t" + issue.getFields().getSummary());
+        build.getResult();
+		if(Result.SUCCESS == build.getResult())
+        {
+            client.updateIssueStatus(issue, realWorkflowActionName);        	
+        }
         client.addIssueComment(issue, realComment);
         client.updateIssueField(issue, customFieldId, realFieldValue);
         //client.updateFixedVersions(issue, fixedVersionNames, resettingFixedVersions, logger);
@@ -396,6 +404,7 @@ public class IssueUpdaterResultsRecorder extends Recorder {
     for (Map.Entry<String, String> entry : vars.entrySet()) {
       realJql = substituteEnvVar(realJql, entry.getKey(), entry.getValue());
       realWorkflowActionName = substituteEnvVar(realWorkflowActionName, entry.getKey(), entry.getValue());
+      logger.println("");
       realComment = substituteEnvVar(realComment, entry.getKey(), entry.getValue());
       realFieldValue = substituteEnvVar(realFieldValue, entry.getKey(), entry.getValue());
       expandedFixedVersions = substituteEnvVar(expandedFixedVersions, entry.getKey(), entry.getValue());

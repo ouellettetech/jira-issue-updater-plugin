@@ -3,6 +3,7 @@ package info.bluefloyd.jenkins;
 import hudson.Extension;
 import hudson.Launcher;
 import hudson.model.BuildListener;
+import hudson.model.Result;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
 import hudson.tasks.BuildStepDescriptor;
@@ -207,8 +208,12 @@ public class IssueUpdatesBuilder extends Builder {
 		// Perform the actions on each found JIRA
 		if (issueSummary.getIssues() != null) {
 			for (IssueSummary issue : issueSummary.getIssues()) {
-				logger.println("Updating " + issue.getKey() + "  \t" + issue.getFields().getSummary());
-				client.updateIssueStatus(issue, realWorkflowActionName);
+				logger.println("Updating in Builder" + issue.getKey() + "  \t" + issue.getFields().getSummary());
+				
+				if(Result.SUCCESS == build.getResult())
+		        {
+					client.updateIssueStatus(issue, realWorkflowActionName);
+		        }
 				client.addIssueComment(issue, realComment);
 				client.updateIssueField(issue, customFieldId, realFieldValue);
 				//client.updateFixedVersions(issue, fixedVersionNames, resettingFixedVersions, logger);
